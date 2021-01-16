@@ -41,29 +41,26 @@ def getInstruction():
     
     return direction
 
-def sendForwardBack():
-    while True:
-        if center != None:
-            if area > 70000:
-                Tello3.send("back 20")
-            elif area < 40000: 
-                Tello3.send("forward 20")
-            time.sleep(0.5)
-
-def sendHorizVertical():
+def sendInstruction():
     while True:
         if center != None:
             inst = getInstruction()
             Tello3.send(inst)
             time.sleep(0.3)
 
+            if area > 70000:
+                Tello3.send("back 20")
+                time.sleep(0.5)
+            elif area < 30000: 
+                Tello3.send("forward 20")
+                time.sleep(0.5)
+
 center = None
 area = 0
 
 stop_data = cv2.CascadeClassifier('frontal.xml') 
 
-Thread(target = sendHorizVertical).start()
-Thread(target = sendForwardBack).start()
+Thread(target = sendInstruction).start()
 
 video = video.WebcamVideoStream("udp://@0.0.0.0:11111").start()
 
