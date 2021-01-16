@@ -33,39 +33,33 @@ def recv():
             print ('\nExit . . .\n')
             break
 
+def send(msg):
+    msg = msg.encode(encoding="utf-8") 
+    sock.sendto(msg, tello_address)
 
-print ('\r\n\r\nTello Python3 Demo.\r\n')
+if __name__ == "__main__":     
+    print ('\r\n\r\nTello Python3 Demo.\r\n')
 
-print ('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
+    print ('Tello: command takeoff land flip forward back left right \r\n       up down cw ccw speed speed?\r\n')
 
-print ('end -- quit demo.\r\n')
+    print ('end -- quit demo.\r\n')
 
 
-#recvThread create
-recvThread = threading.Thread(target=recv)
-recvThread.start()
+    #recvThread create
+    recvThread = threading.Thread(target=recv)
+    recvThread.start()
 
-while True: 
-
-    try:
-        msg = input("");
-
-        if not msg:
-            break  
-
-        if 'end' in msg:
-            print ('...')
+    while True:
+        try:
+            msg = input("");
+            if not msg:
+                break
+            if 'end' in msg:
+                print ('...')
+                sock.close()  
+                break
+            send(msg)
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
             sock.close()  
             break
-
-        # Send data
-        msg = msg.encode(encoding="utf-8") 
-        sent = sock.sendto(msg, tello_address)
-    except KeyboardInterrupt:
-        print ('\n . . .\n')
-        sock.close()  
-        break
-
-
-
-
