@@ -4,6 +4,9 @@ import sys
 import time
 import cv2
 import Tello3
+import imutils
+import numpy as np
+from imutils import video
 
 def getLargest(found):
     out = (0, 0, 0, 0)
@@ -17,8 +20,8 @@ def getLargest(found):
     given the center position of the face
 """
 def getInstruction():
-    width  = video.get(cv2.CAP_PROP_FRAME_WIDTH)
-    height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    width  = video.stream.get(cv2.CAP_PROP_FRAME_WIDTH)
+    height = video.stream.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     # used to determine whether we'll change the drone in x or y axis
     h_diff = height // 2 - center[1]
@@ -27,72 +30,63 @@ def getInstruction():
     direction = ""
 
     # too small difference to make a decision
-    if max(abs(h_diff), abs(w_diff)) < 50:
+    if max(abs(h_diff), abs(w_diff)) < 100:
         return None
 
     # more height difference than horizontal difference
     if abs(h_diff) > abs(w_diff):
         direction = "down 20" if h_diff < 0 else "up 20"
     else:
-        direction = "cw 5" if w_diff < 0 else "ccw 5"
+        direction = "cw 10" if w_diff < 0 else "ccw 10"
     
     return direction
 
+def sendForwardBack():
+    while True:
+        if center != None:
+            if area > 70000:
+                Tello3.send("back 20")
+            elif area < 40000: 
+                Tello3.send("forward 20")
+            time.sleep(0.5)
 
-def sendInstruction():
+def sendHorizVertical():
     while True:
         if center != None:
             inst = getInstruction()
-            print(inst)
             Tello3.send(inst)
-            time.sleep(1)
+            time.sleep(0.3)
 
-def readFrames():
-    while True:
-        ret, f = video.read()
-        if ret == True:
-            frame = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
-        
 center = None
-frame = None
-ret = False
+area = 0
 
 stop_data = cv2.CascadeClassifier('frontal.xml') 
 
-Thread(target = sendInstruction).start()
+Thread(target = sendHorizVertical).start()
+Thread(target = sendForwardBack).start()
 
-video = cv2.VideoCapture("udp://@0.0.0.0:11111")
-
-Thread(target = readFrames).start()
-
-# video.set(cv2.CAP_PROP_BUFFERSIZE, 0)
+video = video.WebcamVideoStream("udp://@0.0.0.0:11111").start()
 
 while True:
-    # print(frame == None)
     try:
-        # ret, frame = video.read()
-        if ret:
-            # print("printing 2")
-            found = stop_data.detectMultiScale(frame, minSize = (150, 150))
-            
-            if len(found) != 0: 
-                (x, y, width, height) = getLargest(found)    
-                cv2.rectangle(frame, (x, y), (x + height, y + width), (255, 255, 255), 5)
-                # this is the center, which will be used to send the correct instruction to the drone
-                center = (x + width//2, y + height//2)
-                # cv2.circle(frame, center, 2, (255, 255, 255), 5)
-            else:
-                center = None
+        frame = video.read()
+        found = stop_data.detectMultiScale(frame, minSize = (100, 100))
+        
+        if len(found) != 0:
+            (x, y, width, height) = getLargest(found)    
+            cv2.rectangle(frame, (x, y), (x + height, y + width), (255, 255, 255), 5)
+
+            # this is the center, which will be used to send the correct instruction to the drone
+            center = (x + width//2, y + height//2)
+            area = width * height
         else:
             center = None
-        
-        if frame != None:
-            print("printing")
-            cv2.imshow("frame", frame)
-            cv2.waitKey(1)
-            
+
+        # draw (with rectangle around the face if found any)
+        cv2.imshow("frame", frame)
+        cv2.waitKey(1)
     except Exception as err:
-        video.release()
+        video.stop()
         center = None
         cv2.destroyAllWindows()
         print ('\nExit Video . . .\n', err)

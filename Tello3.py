@@ -34,8 +34,9 @@ def recv():
             break
 
 def send(msg):
-    msg = msg.encode(encoding="utf-8") 
-    sock.sendto(msg, tello_address)
+    if msg != None:
+        msg = msg.encode(encoding="utf-8") 
+        sock.sendto(msg, tello_address)
 
 if __name__ == "__main__":     
     print ('\r\n\r\nTello Python3 Demo.\r\n')
