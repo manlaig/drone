@@ -37,7 +37,7 @@ def getInstruction():
     if abs(h_diff) > abs(w_diff):
         direction = "down 20" if h_diff < 0 else "up 20"
     else:
-        direction = "cw 10" if w_diff < 0 else "ccw 10"
+        direction = "cw 15" if w_diff < 0 else "ccw 15"
     
     return direction
 
@@ -46,14 +46,12 @@ def sendInstruction():
         if center != None:
             inst = getInstruction()
             Tello3.send(inst)
-            time.sleep(0.3)
+            time.sleep(0.5)
 
             if area > 70000:
                 Tello3.send("back 20")
-                time.sleep(0.5)
             elif area < 30000: 
                 Tello3.send("forward 20")
-                time.sleep(0.5)
 
 center = None
 area = 0
