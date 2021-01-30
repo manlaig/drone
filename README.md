@@ -1,8 +1,8 @@
 # Face follow with drone
 
-Drone used: DJI Tello Edu
+Drone: DJI Tello Edu
 
-SDK Used: DJI SDK 2
+SDK: DJI SDK 2
 
 ## Demo
 
